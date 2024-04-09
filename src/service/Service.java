@@ -231,7 +231,7 @@ public class Service {
             }else{
                 for (Model_Client c : listClient) {
                     if (c.getUser().getUserID() == data.getToUserID()) {
-                        c.getClient().sendEvent("receive_ms", new Model_Receive_Message(data.getMessageType(), data.getFromUserID(), data.getUserName(), data.getFromUserID(), data.getText(), null));
+                        c.getClient().sendEvent("receive_ms", new Model_Receive_Message(data.getMessageType(), data.getFromUserID(), data.getUserName(), data.getToUserID(), data.getText(), null));
                         break;
                     }
                 }
@@ -247,7 +247,7 @@ public class Service {
         }else{
             for (Model_Client c : listClient) {
                 if (c.getUser().getUserID() == data.getToUserID()) {
-                    c.getClient().sendEvent("receive_ms", new Model_Receive_Message(data.getMessageType(), data.getFromUserID(), data.getUserName(), data.getFromUserID(), data.getText(), dataImage));
+                    c.getClient().sendEvent("receive_ms", new Model_Receive_Message(data.getMessageType(), data.getFromUserID(), data.getUserName(), data.getToUserID(), data.getText(), dataImage));
                     break;
                 }
             }    

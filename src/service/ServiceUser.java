@@ -154,6 +154,7 @@ public class ServiceUser {
             p.setString(3, data.getName());
             p.setInt(4, data.getMessageType());
             p.setString(5, data.getMess());
+            p.setInt(6, data.getSide());
             p.execute();
             p.close();
         } catch (SQLException ex) {
@@ -174,7 +175,8 @@ public class ServiceUser {
             String name = r.getString(4);
             int type  = r.getInt(5);
             String mess = r.getString(6);
-            messages.add(new Model_History_Message(idFrom, idTo, name, type, mess));
+            int  side = r.getInt(7);
+            messages.add(new Model_History_Message(idFrom, idTo, name, type, mess, side));
         }
         r.close();
         p.close();
@@ -187,7 +189,7 @@ public class ServiceUser {
     private final String INSERT_USER = "insert into user (userName, pass) values (?,?)";
     private final String INSERT_USER_ACCOUNT = "insert into user_account (userID, userName, status) values (?,?,?)";
     private final String CHECK_USER = "SELECT 1 FROM user WHERE username = ? LIMIT 1";
-    private final String INSERT_MESS = "insert into history_message (idFrom, idTo, name, type, mess) values (?,?,?,?,?)";
+    private final String INSERT_MESS = "insert into history_message (idFrom, idTo, name, type, mess, side) values (?,?,?,?,?,?)";
     private final String SELECT_MESS = "SELECT * FROM history_message WHERE idFrom = ? or idTo = ?";
     //  Instance
     private final Connection con;
