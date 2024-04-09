@@ -23,6 +23,7 @@ import java.util.List;
 import javax.swing.JTextArea;
 import model.Model_Client;
 import model.Model_File;
+import model.Model_History_Message;
 
 import model.Model_Login;
 import model.Model_Package_Sender;
@@ -166,6 +167,37 @@ public class Service {
                 }
             }
         });
+        server.addEventListener("saveMessage", Model_History_Message.class, new DataListener<Model_History_Message>() {
+            @Override
+            public void onData(SocketIOClient sioc, Model_History_Message message, AckRequest ackRequest) throws Exception {
+                serviceUser.saveMess(message);
+                System.out.println("Save mess");
+                
+            }
+        });
+        server.addEventListener("getUserMessages", Integer.class, new DataListener<Integer>() {
+            @Override
+            public void onData(SocketIOClient sioc, Integer userId, AckRequest ackRequest) throws Exception {
+                System.out.println("server.addEventListener(\"getUserMessages\"");
+                try{
+                    List<Model_History_Message> userMessages = serviceUser.getMessages(userId);
+                    System.out.println("List<Model_History_Message> userMessages = serviceUser.getMessages(userId);");
+                    for (Model_Client c : listClient) {
+                        if (c.getUser().getUserID() == userId) {
+                            c.getClient().sendEvent("getMessages", userMessages.toArray());
+                            System.out.println("etMessages" + c.getUser().getUserID());
+                            break;
+                        }
+                    }
+                    
+                }catch (SQLException e) {
+                    System.err.println(e);
+                }
+                
+            }
+        });
+
+
         server.start();
         textArea.append("Server has Start on port : " + PORT_NUMBER + "\n");
     }
