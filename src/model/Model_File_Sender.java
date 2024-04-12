@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package model;
 
 import java.io.File;
@@ -57,16 +54,11 @@ public class Model_File_Sender {
     private RandomAccessFile accFile;
     private long fileSize;
 
-    public byte[] read(long currentLength) throws IOException {
-        accFile.seek(currentLength);
-        if (currentLength != fileSize) {
-            int max = 2000;
-            long length = currentLength + max >= fileSize ? fileSize - currentLength : max;
-            byte[] b = new byte[(int) length];
-            accFile.read(b);
-            return b;
-        } else {
-            return null;
-        }
+
+    public byte[] read() throws IOException {
+        accFile.seek(0);
+        byte[] data = new byte[(int) fileSize];
+        accFile.readFully(data);
+        return data;
     }
 }

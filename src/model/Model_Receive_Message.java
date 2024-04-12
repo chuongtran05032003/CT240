@@ -3,44 +3,26 @@ package model;
 
 public class Model_Receive_Message {
 
-    /**
-     * @return the userID
-     */
     public int getUserID() {
         return userID;
     }
 
-    /**
-     * @param userID the userID to set
-     */
     public void setUserID(int userID) {
         this.userID = userID;
     }
 
-    /**
-     * @return the userName
-     */
     public String getUserName() {
         return userName;
     }
 
-    /**
-     * @param userName the userName to set
-     */
     public void setUserName(String userName) {
         this.userName = userName;
     }
 
-    /**
-     * @return the dataFile
-     */
     public Model_File_Receiver getDataFile() {
         return dataFile;
     }
 
-    /**
-     * @param dataFile the dataFile to set
-     */
     public void setDataFile(Model_File_Receiver dataFile) {
         this.dataFile = dataFile;
     }

@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package service;
 
 import app.MessageType;
@@ -106,10 +103,13 @@ public class ServiceFile {
         return file;
     }
 
-    public byte[] getFileData(long currentLength, int fileID) throws IOException, SQLException {
+    public synchronized byte[] getFileData(int fileID) throws IOException, SQLException {
         initFile(fileID);
-        return fileSenders.get(fileID).read(currentLength);
+        return fileSenders.get(fileID).read();
     }
+    
+
+
 
     public long getFileSize(int fileID) {
         return fileSenders.get(fileID).getFileSize();

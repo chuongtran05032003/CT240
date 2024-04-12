@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package service;
 
 
@@ -54,6 +51,7 @@ public class Service {
         serviceUser = new ServiceUser();
         serviceFile = new ServiceFile();
         listClient = new ArrayList<>();
+        
     }
 
     public void startServer() {
@@ -61,10 +59,12 @@ public class Service {
         config.setHostname("0.0.0.0");
         config.setPort(PORT_NUMBER);
         server = new SocketIOServer(config);
+        
         server.addConnectListener(new ConnectListener() {
             @Override
             public void onConnect(SocketIOClient sioc) {
                 textArea.append("One client connected\n");
+                
             }
         });
         server.addDisconnectListener(new DisconnectListener() {
@@ -78,6 +78,7 @@ public class Service {
             public void onData(SocketIOClient sioc, Model_Register t, AckRequest ar) throws Exception {
                 Model_Message message = serviceUser.register(t);
                 ar.sendAckData(message.isAction(), message.getMessage(), message.getData());
+                System.out.println(message.getMessage());
                 if (message.isAction()) {
                     textArea.append("User has Register :" + t.getUserName() + " Pass :" + t.getPassword() + "\n");
                     server.getBroadcastOperations().sendEvent("list_user", (Model_User_Account) message.getData());
@@ -91,8 +92,10 @@ public class Service {
                 Model_Message message = serviceUser.login(t);
                 Model_User_Account login = (Model_User_Account) message.getData();
                 ar.sendAckData(message.isAction(), message.getMessage(), login);
-                addClient(sioc, login);
-                userConnect(login.getUserID());
+                if(message.isAction()){
+                    addClient(sioc, login);
+                    userConnect(login.getUserID());
+                }
             }
         });
         server.addEventListener("list_user", Integer.class, new DataListener<Integer>() {
@@ -124,7 +127,6 @@ public class Service {
                         dataImage.setFileID(t.getFileID());
                         dataImage.setFileName(t.getFileName());
                         Model_Send_Message message = serviceFile.closeFile(dataImage);
-                        //  Send to client 'message'
                         sendTempFileToClient(message, dataImage);
 
                     } else {
@@ -142,12 +144,14 @@ public class Service {
                 Model_File file = serviceFile.initFile(t);
                 long fileSize = serviceFile.getFileSize(t);
                 ar.sendAckData(file.getFileExtension(), fileSize, file.getFileName());
+                System.out.println("get_file");
             }
         });
+        
         server.addEventListener("request_file", Model_Request_File.class, new DataListener<Model_Request_File>() {
             @Override
             public void onData(SocketIOClient sioc, Model_Request_File t, AckRequest ar) throws Exception {
-                byte[] data = serviceFile.getFileData(t.getCurrentLength(), t.getFileID());
+                byte[] data = serviceFile.getFileData(t.getFileID());
                 if (data != null) {
                     ar.sendAckData(data);
                 } else {
@@ -156,6 +160,20 @@ public class Service {
             }
         });
         
+
+
+
+        
+        server.addEventListener("disconnect", Integer.class, new DataListener<Integer>() {
+            @Override
+            public void onData(SocketIOClient sioc, Integer userID, AckRequest ar) throws Exception {
+                for (Model_Client c : listClient) {
+                    if (c.getUser().getUserID() == userID) {
+                        userDisconnect(userID);
+                    }
+                }
+            }
+        });
         
         server.addDisconnectListener(new DisconnectListener() {
             @Override
@@ -171,21 +189,17 @@ public class Service {
             @Override
             public void onData(SocketIOClient sioc, Model_History_Message message, AckRequest ackRequest) throws Exception {
                 serviceUser.saveMess(message);
-                System.out.println("Save mess");
                 
             }
         });
         server.addEventListener("getUserMessages", Integer.class, new DataListener<Integer>() {
             @Override
             public void onData(SocketIOClient sioc, Integer userId, AckRequest ackRequest) throws Exception {
-                System.out.println("server.addEventListener(\"getUserMessages\"");
                 try{
                     List<Model_History_Message> userMessages = serviceUser.getMessages(userId);
-                    System.out.println("List<Model_History_Message> userMessages = serviceUser.getMessages(userId);");
                     for (Model_Client c : listClient) {
                         if (c.getUser().getUserID() == userId) {
                             c.getClient().sendEvent("getMessages", userMessages.toArray());
-                            System.out.println("etMessages" + c.getUser().getUserID());
                             break;
                         }
                     }
@@ -223,30 +237,37 @@ public class Service {
             } catch (IOException | SQLException e) {
                 e.printStackTrace();
             }
-        } else {
+        }else{
             if (data.getToUserID() == 1000){
                 for (Model_Client c : listClient) {
-                    c.getClient().sendEvent("receive_ms", new Model_Receive_Message(data.getMessageType(), 1000, data.getUserName(), data.getFromUserID(), data.getText(), null));
+                    if(c.getUser().getUserID() != data.getFromUserID())
+                        c.getClient().sendEvent("receive_ms", new Model_Receive_Message(data.getMessageType(), 1000, data.getUserName(), c.getUser().getUserID(), data.getText(), null));
                 }
             }else{
                 for (Model_Client c : listClient) {
                     if (c.getUser().getUserID() == data.getToUserID()) {
+                        
                         c.getClient().sendEvent("receive_ms", new Model_Receive_Message(data.getMessageType(), data.getFromUserID(), data.getUserName(), data.getToUserID(), data.getText(), null));
                         break;
                     }
                 }
             }
         }
+            
+        
     }
     
     private void sendTempFileToClient(Model_Send_Message data, Model_Receive_Image dataImage) {
         if (data.getToUserID() == 1000){
                 for (Model_Client c : listClient) {
-                    c.getClient().sendEvent("receive_ms", new Model_Receive_Message(data.getMessageType(), 1000, data.getUserName(), data.getFromUserID(), data.getText(), dataImage));
+                    if(c.getUser().getUserID() != data.getFromUserID()){
+                        c.getClient().sendEvent("receive_ms", new Model_Receive_Message(data.getMessageType(), 1000, data.getUserName(), c.getUser().getUserID(), data.getText(), dataImage));
+                    }
                 }
         }else{
             for (Model_Client c : listClient) {
                 if (c.getUser().getUserID() == data.getToUserID()) {
+                    
                     c.getClient().sendEvent("receive_ms", new Model_Receive_Message(data.getMessageType(), data.getFromUserID(), data.getUserName(), data.getToUserID(), data.getText(), dataImage));
                     break;
                 }
